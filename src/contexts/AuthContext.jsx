@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
+import { authService } from '../services'
 
 const AuthContext = createContext()
 
@@ -10,63 +11,65 @@ export const useAuth = () => {
   return context
 }
 
-const CREDENTIALS = {
-  username: 'admin',
-  password: 'finance123'
-}
-
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const savedAuth = localStorage.getItem('auth')
-    if (savedAuth) {
-      const authData = JSON.parse(savedAuth)
-      setUser(authData.user)
-    }
+    // Check for existing session on mount
+    const currentUser = authService.getCurrentUser()
+    setUser(currentUser)
     setLoading(false)
   }, [])
 
-  const login = (username, password) => {
-    if (username === CREDENTIALS.username && password === CREDENTIALS.password) {
-      const userData = {
-        id: 1,
-        username: CREDENTIALS.username,
-        fullName: 'Admin User'
+  const login = async (username, password) => {
+    setLoading(true)
+    try {
+      const result = await authService.login(username, password)
+      if (result.success) {
+        setUser(result.data)
+        return true
       }
-      setUser(userData)
-      localStorage.setItem('auth', JSON.stringify({ 
-        isAuthenticated: true, 
-        user: userData 
-      }))
-      return true
+      return false
+    } catch (error) {
+      console.error('Login error:', error)
+      return false
+    } finally {
+      setLoading(false)
     }
-    return false
   }
 
-  const logout = () => {
-    setUser(null)
-    localStorage.removeItem('auth')
+  const logout = async () => {
+    try {
+      await authService.logout()
+      setUser(null)
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
   }
 
-  const updateProfile = (newData) => {
-    const updatedUser = { ...user, ...newData }
-    setUser(updatedUser)
-    localStorage.setItem('auth', JSON.stringify({
-      isAuthenticated: true,
-      user: updatedUser
-    }))
+  const updateProfile = async (newData) => {
+    try {
+      const result = await authService.updateProfile(newData)
+      if (result.success) {
+        setUser(result.data)
+        return result
+      }
+      return result
+    } catch (error) {
+      console.error('Update profile error:', error)
+      return { success: false, error: 'Failed to update profile' }
+    }
   }
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      login, 
-      logout, 
+    <AuthContext.Provider value={{
+      user,
+      login,
+      logout,
       updateProfile,
       loading,
-      isAuthenticated: !!user 
+      isAuthenticated: !!user
     }}>
       {children}
     </AuthContext.Provider>

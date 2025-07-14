@@ -28,16 +28,19 @@ const Login = () => {
     setLoading(true)
     setError('')
 
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500))
+    try {
+      const success = await login(formData.username, formData.password)
 
-    const success = login(formData.username, formData.password)
-
-    if (!success) {
-      setError('Invalid username or password')
+      if (!success) {
+        setError('Invalid username or password')
+      }
+      // Note: jika success, useAuth akan mengupdate isAuthenticated dan Navigate akan redirect otomatis
+    } catch (error) {
+      console.error('Login error:', error)
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
   const handleChange = (e) => {

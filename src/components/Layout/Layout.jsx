@@ -62,7 +62,7 @@ const Layout = () => {
                         : 'border-transparent text-gray-700 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700'
                         }`}
                     >
-                      {item.icon}
+                      <item.icon className="h-4 w-4" />
                       <span className="ml-2">{item.name}</span>
                     </Link>
                   )
@@ -165,7 +165,7 @@ const Layout = () => {
                         }`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      {item.icon}
+                      <item.icon className="h-4 w-4" />
                       <span className="ml-3">{item.name}</span>
                     </Link>
                   )
